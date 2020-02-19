@@ -1,0 +1,26 @@
+{
+    "name": "boytunghc/laravel-git-hook",
+    "description": "Package help deploy application with git hook",
+    "type": "package",
+    "require-dev": {
+        "orchestra/testbench": "^4.0",
+        "laravel/framework": "^5.0|^6.0"
+    },
+    "authors": [
+        {
+            "name": "Alex",
+            "email": "boytunghc@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {"Boytunghc\\LaravelGitHook\\": "src/"}
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Boytunghc\\LaravelGitHook\\Providers\\AppServiceProvider",
+                "Boytunghc\\LaravelGitHook\\Providers\\RouteServiceProvider"
+            ]
+        }
+    }
+}
