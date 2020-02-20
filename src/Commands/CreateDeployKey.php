@@ -76,6 +76,6 @@ class CreateDeployKey extends Command
 
         $escaped = preg_quote('='.$key, '/');
 
-        return "/^{GIT_DEPLOY_KEY}{$escaped}/m";
+        return "/^GIT_DEPLOY_KEY$escaped/m";
     }
 }
