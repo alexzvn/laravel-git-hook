@@ -59,6 +59,7 @@ class Handle
             ]);
         }
 
+        chdir('..'); // change working dir to root of project
         $this->execCommands($this->buildCommands(), $log);
 
         $msg = 'Deploy success with ' . count($hook->commits() ?? []) . ' commits';
@@ -87,6 +88,11 @@ class Handle
         return in_array($request->ip(), config('githook.')) ? true : false;
     }
 
+    /**
+     * Make list command to execute
+     *
+     * @return string[]
+     */
     private function buildCommands()
     {
         $commands = array_merge(
@@ -95,15 +101,9 @@ class Handle
             config('githook.after_pull')
         );
 
-        if (config('githook.maintain_mode')) {
-            $commands = array_merge(
-                ['php artisan down'],
-                $commands,
-                ['php artisan up']
-            );
-        }
-
-        return $commands;
+        return array_map(function ($cmd) {
+            return trim($cmd);
+        }, $commands);
     }
 
     /**
@@ -111,17 +111,24 @@ class Handle
      *
      * @param array $commands
      * @param \Monolog\Logger $log
-     * @return void
+     * @return string[] output console
      */
-    private function execCommands(array $commands = [], Logger $log = null)
+    private function execCommands(array $commands = [], Logger $logger)
     {
-        $shouldLog = $log !== null ? true : false;
-
         foreach ($commands as $cmd) {
-            $output = `$cmd`;
+            exec("$cmd 2>&1", $output);
 
-            if ($shouldLog) {
-                $log->addRecord($log::INFO, $output ?? '');
+            $logger->addRecord($logger::INFO, "Executed command: \"$cmd\"");
+            $this->logMany($output, $logger, $logger::DEBUG);
+            unset($output);
+        }
+    }
+
+    protected function logMany(array $logs, Logger $logger, int $type)
+    {
+        foreach ($logs as $log) {
+            if (!empty($log)) {
+                $logger->addRecord($type, $log);
             }
         }
     }
