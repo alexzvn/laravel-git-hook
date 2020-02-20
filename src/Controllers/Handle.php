@@ -7,11 +7,11 @@ namespace Boytunghc\LaravelGitHook\Controllers;
 use Monolog\Logger;
 use Illuminate\Http\Request;
 use Monolog\Handler\StreamHandler;
-use Boytunghc\LaravelGitHook\Contracts\HookInterface;
+use Boytunghc\LaravelGitHook\Contracts\HookContract;
 
 class Handle
 {
-    public function gitHook(Request $request, HookInterface $hook)
+    public function gitHook(Request $request, HookContract $hook)
     {
         $log = new Logger('githook');
         $log->pushHandler(new StreamHandler(storage_path('logs/githook.log')));

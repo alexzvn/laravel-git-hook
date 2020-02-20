@@ -3,9 +3,9 @@
 namespace Boytunghc\LaravelGitHook\Controllers\Hook;
 
 use Illuminate\Http\Request;
-use Boytunghc\LaravelGitHook\Contracts\HookInterface;
+use Boytunghc\LaravelGitHook\Contracts\HookContract;
 
-abstract class Hook implements HookInterface
+abstract class Hook implements HookContract
 {
     /**
      * Request
@@ -22,11 +22,11 @@ abstract class Hook implements HookInterface
     protected $secretKey;
 
     /**
-     * body payload
+     * Body payload from request
      *
-     * @var mixed
+     * @var mixed json decoded object
      */
-    protected $payload;
+    public $payload;
 
     /**
      * Header key

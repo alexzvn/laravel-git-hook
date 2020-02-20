@@ -4,15 +4,8 @@ namespace Boytunghc\LaravelGitHook\Contracts;
 
 use Illuminate\Http\Request;
 
-interface HookInterface
+interface HookContract
 {
-    /**
-     * Body payload from request
-     *
-     * @var mixed json decoded object
-     */
-    public $payload;
-
     /**
      * bind dependency
      *

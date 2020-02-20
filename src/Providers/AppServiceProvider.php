@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->commands([CreateDeployKey::class]);
 
-        $this->app->bind('Boytunghc\LaravelGitHook\Contracts\HookInterface', function () {
+        $this->app->bind('Boytunghc\LaravelGitHook\Contracts\HookContract', function () {
             $drive = config('githook.drive');
 
             if ($drive === 'github') {
