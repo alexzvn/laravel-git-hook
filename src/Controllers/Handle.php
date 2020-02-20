@@ -48,7 +48,7 @@ class Handle
             ], 400);
         }
 
-        $localBranch = `git rev-parse --abbrev-ref HEAD`;
+        $localBranch = trim(`git rev-parse --abbrev-ref HEAD`);
 
         if ($localBranch !== $hook->branch()) {
             $msg = 'Pushed refs do not match current branch';
@@ -59,15 +59,11 @@ class Handle
             ]);
         }
 
-       $this->execCommands(config('githook.before_pull'), $log);
+        $this->execCommands($this->buildCommands(), $log);
 
-       $log->addRecord(Logger::INFO, `git pull`);
+        $msg = 'Deploy success with ' . count($hook->commits() ?? []) . ' commits';
 
-       $this->execCommands(config('githook.after_pull'), $log);
-
-       $msg = 'Deploy success with ' . count($hook->commits() ?? []) . ' commits';
-
-       $log->addRecord(Logger::INFO, $msg);
+        $log->addRecord(Logger::INFO, $msg);
 
        return response([
            'success' => true,
@@ -91,6 +87,25 @@ class Handle
         return in_array($request->ip(), config('githook.')) ? true : false;
     }
 
+    private function buildCommands()
+    {
+        $commands = array_merge(
+            config('githook.before_pull'),
+            ['git pull'],
+            config('githook.after_pull')
+        );
+
+        if (config('githook.maintain_mode')) {
+            $commands = array_merge(
+                ['php artisan down'],
+                $commands,
+                ['php artisan up']
+            );
+        }
+
+        return $commands;
+    }
+
     /**
      * Execute list command
      *
@@ -106,7 +121,7 @@ class Handle
             $output = `$cmd`;
 
             if ($shouldLog) {
-                $log->addRecord($log::INFO, $output);
+                $log->addRecord($log::INFO, $output ?? '');
             }
         }
     }
