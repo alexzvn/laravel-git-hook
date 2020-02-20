@@ -18,12 +18,12 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             if ($this->app instanceof Laravel) {
                 $this->publishes([
-                    __DIR__ . '/../config/githook.php' => config_path('githook.php')
+                    __DIR__ . '/../../config/githook.php' => config_path('githook.php')
                 ], 'config');
             }
         }
 
-        $this->loadViewsFrom(__DIR__ . '/../Views', 'Boytunghc\LaravelGitHook');
+        // $this->loadViewsFrom(__DIR__ . '/../../Views', 'Boytunghc\LaravelGitHook');
 
         $this->commands([CreateDeployKey::class]);
 
