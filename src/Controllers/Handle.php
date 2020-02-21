@@ -7,11 +7,11 @@ namespace Boytunghc\LaravelGitHook\Controllers;
 use Monolog\Logger;
 use Illuminate\Http\Request;
 use Monolog\Handler\StreamHandler;
-use Boytunghc\LaravelGitHook\Contracts\HookInterface;
+use Boytunghc\LaravelGitHook\Contracts\HookContract;
 
 class Handle
 {
-    public function gitHook(Request $request, HookInterface $hook)
+    public function gitHook(Request $request, HookContract $hook)
     {
         $log = new Logger('githook');
         $log->pushHandler(new StreamHandler(storage_path('logs/githook.log')));
@@ -48,7 +48,7 @@ class Handle
             ], 400);
         }
 
-        $localBranch = `git rev-parse --abbrev-ref HEAD`;
+        $localBranch = trim(`git rev-parse --abbrev-ref HEAD`);
 
         if ($localBranch !== $hook->branch()) {
             $msg = 'Pushed refs do not match current branch';
@@ -59,15 +59,12 @@ class Handle
             ]);
         }
 
-       $this->execCommands(config('githook.before_pull'), $log);
+        chdir('..'); // change working dir to root of project
+        $this->execCommands($this->buildCommands(), $log);
 
-       $log->addRecord(Logger::INFO, `git pull`);
+        $msg = 'Deploy success with ' . count($hook->commits() ?? []) . ' commits';
 
-       $this->execCommands(config('githook.after_pull'), $log);
-
-       $msg = 'Deploy success with ' . count($hook->commits() ?? []) . ' commits';
-
-       $log->addRecord(Logger::INFO, $msg);
+        $log->addRecord(Logger::INFO, $msg);
 
        return response([
            'success' => true,
@@ -92,21 +89,46 @@ class Handle
     }
 
     /**
+     * Make list command to execute
+     *
+     * @return string[]
+     */
+    private function buildCommands()
+    {
+        $commands = array_merge(
+            config('githook.before_pull'),
+            ['git pull'],
+            config('githook.after_pull')
+        );
+
+        return array_map(function ($cmd) {
+            return trim($cmd);
+        }, $commands);
+    }
+
+    /**
      * Execute list command
      *
      * @param array $commands
      * @param \Monolog\Logger $log
-     * @return void
+     * @return string[] output console
      */
-    private function execCommands(array $commands = [], Logger $log = null)
+    private function execCommands(array $commands = [], Logger $logger)
     {
-        $shouldLog = $log !== null ? true : false;
-
         foreach ($commands as $cmd) {
-            $output = `$cmd`;
+            exec("$cmd 2>&1", $output);
 
-            if ($shouldLog) {
-                $log->addRecord($log::INFO, $output);
+            $logger->addRecord($logger::INFO, "Executed command: \"$cmd\"");
+            $this->logMany($output, $logger, $logger::DEBUG);
+            unset($output);
+        }
+    }
+
+    protected function logMany(array $logs, Logger $logger, int $type)
+    {
+        foreach ($logs as $log) {
+            if (!empty($log)) {
+                $logger->addRecord($type, $log);
             }
         }
     }
